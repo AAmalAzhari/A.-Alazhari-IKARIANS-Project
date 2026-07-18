@@ -1,0 +1,230 @@
+---
+title: "Health Data Mapping, Insight Discovery and AI Readiness"
+author: "Abdulrahman Alazhari"
+
+---
+
+# Data Source Catalogue
+
+## 1. Apple Health
+Apple Health categorizes its data primarily into `HKQuantityType` (numerical values) and `HKCategoryType` (small set of possible values, like sleep stages).
+
+**Cardiovascular and Vital Signs:**
+
+*   **Heart Rate:** `heartRate`, `restingHeartRate`, `walkingHeartRateAverage`.
+*   **Heart Rate Variability (HRV):** Measured as the standard deviation of heartbeat intervals (`heartRateVariabilitySDNN`).
+*   **Blood Pressure:** Captures both `bloodPressureSystolic` and `bloodPressureDiastolic`.
+*   **Respiration & Oxygen:** `respiratoryRate`, `oxygenSaturation`, and `forcedVitalCapacity`.
+*   **Electrocardiogram:** `ElectrocardiogramType` for ECG data.
+*   **Body Temperature:** `bodyTemperature` and `basalBodyTemperature`.
+
+**Activity and Mobility Metrics:**
+
+*   **Movement:** `stepCount`, `distanceWalkingRunning`, `distanceCycling`, and `distanceWheelchair`.
+*   **Energy:** `basalEnergyBurned` (resting) and `activeEnergyBurned`.
+*   **Advanced Gait Metrics:** `walkingSpeed`, `walkingStepLength`, `walkingAsymmetryPercentage`, and `appleWalkingSteadiness`.
+
+**Clinical and Wellness Data:**
+
+*   **Body Measurements:** `bodyMassIndex` (BMI), `bodyFatPercentage`, `leanBodyMass`, and `waistCircumference`.
+*   **Sleep:** `sleepAnalysis` (category sample for sleep information).
+*   **Blood & Symptoms:** `bloodGlucose`, `bloodAlcoholContent`, and `electrodermalActivity` (sweat gland activity).
+
+**Summary Table:**
+
+| Variable Name | Category |
+| :--- | :--- |
+| **Heart Rate** | Cardiovascular & Vitals |
+| **Resting Heart Rate** | |
+| **Walking Heart Rate Average** | |
+| **Heart Rate Variability** | |
+| **Blood Pressure** | |
+| **Electrocardiograms (ECG)** | |
+| **Respiratory Rate** | Respiration & Oxygen |
+| **Blood Oxygen** | |
+| **Body Temperature** | Vitals / Cycle Tracking |
+| **Basal Body Temperature** | |
+| **Steps** | Activity & Mobility |
+| **Walking + Running Distance** | |
+| **Resting Energy** | |
+| **Active Energy** | |
+| **Walking Speed** | Advanced Gait Metrics |
+| **Walking Asymmetry** | |
+| **Sleep** | Clinical & Wellness |
+| **Blood Glucose** | |
+| **Body Fat Percentage** | Body Measurements |
+| **Lean Body Mass** | |
+
+***
+
+## 2. Samsung Health
+Samsung Health explicitly tracks user-set goals as distinct, aggregatable data types.
+
+**Physiological and Sleep Metrics:**
+
+*   **Cardiovascular:** Heart rate (supports aggregation and read changes), Blood pressure, and Irregular heart rhythm notifications.
+*   **Blood & Oxygen:** Blood glucose and Blood oxygen.
+*   **Sleep Data:** Tracks overall Sleep, Sleep apnea, and allows setting a "Sleep goal".
+*   **Temperature & Composition:** Skin temperature, Body temperature, and Body composition.
+
+**Activity & Lifestyle:**
+
+*   **Activity Tracking:** Exercise, Exercise location, and Floors climbed.
+*   **Energy & Nutrition:** Energy score, Active calories burned goal, Active time goal, Nutrition logs, and Nutrition goals.
+
+**Summary Table:**
+
+| Variable Name | Category |
+| :--- | :--- |
+| **Heart rate** | Cardiovascular |
+| **Blood pressure** | |
+| **Irregular heart rhythm notification** | |
+| **Blood glucose** | Blood & Oxygen |
+| **Blood oxygen** | |
+| **Sleep** | Sleep Data |
+| **Sleep apnea** | |
+| **Sleep goal** | |
+| **Skin temperature** | Temperature |
+| **Body temperature** | |
+| **Body composition** | Composition |
+| **Exercise** | Activity Tracking |
+| **Floors climbed** | |
+| **Energy score** | Energy & Nutrition |
+| **Nutrition** | |
+
+***
+
+## 3. Google Health
+Google specifically standardizes exercise distances (e.g. `elevationGainMillimeters`) in millimeters to maintain high precision across all developers, regardless of imperial or metric systems.
+
+**Cardiovascular & Vitals:**
+
+*   **Heart Metrics:** Heart Rate, Resting Heart Rate, Daily Heart Rate Variability, Heart Rate Zones, and Electrocardiogram (ECG).
+*   **Respiratory & Oxygen:** Oxygen Saturation, Daily Respiratory Rate, and Core Body Temperature.
+
+**Activity & Body Metrics:**
+
+*   **Energy & Workouts:** Active Energy Burned, Active Minutes, VO2 Max, Run VO2 Max, Steps, Distance, and Swim Lengths Data.
+*   **Body & Nutrition:** Weight, Height, Body Fat, Hydration Log, Food logs, and Nutrition Log.
+*   **Sleep:** Sleep sessions and Respiratory Rate Sleep Summary.
+
+**Summary Table:**
+
+| Variable Name | Category |
+| :--- | :--- |
+| **Heart Rate** | Heart & Cardiovascular |
+| **Daily Resting Heart Rate** | |
+| **Heart Rate Variability** | |
+| **Electrocardiogram (ECG)** | |
+| **Oxygen Saturation** | Vitals |
+| **Daily Respiratory Rate** | |
+| **Core Body Temperature** | |
+| **Active Energy Burned** | Activity & Workouts |
+| **VO2 Max** | |
+| **Steps** | |
+| **Distance** | |
+| **Weight** | Body Measurements |
+| **Height** | |
+| **Body Fat** | |
+| **Nutrition Log** | Nutrition |
+| **Sleep** | Sleep |
+
+***
+
+## 4. Garmin
+Garmin uniquely separates its data streams into All-Day Metrics (via the Health API/Companion SDK) and Real-Time Streaming Metrics (via the Standard/Companion SDKs).
+
+**All-Day Metrics (Historic/Daily Aggregations):**
+
+*   **Energy & Stress:** Body Battery, Stress Levels, Calories, and Intensity Minutes.
+*   **Vitals:** Heart Rate, Pulse Ox, Respiration Rate, and Index Scale Biometrics.
+*   **Activity & Sleep:** Steps, Distance, Floors Climbed, Fitness Activity Details, Sleep, Advanced Sleep Data, and Health Snapshot.
+
+**Real-Time Streaming & Customizable Logging:**
+
+*   **High-Resolution Physiological Data:** Enhanced Beat-To-Beat Intervals (crucial for accurate real-time HRV calculations), Heart Rate, Pulse Ox, and Respiration Rate.
+*   **Raw Kinematics:** Accelerometer (including sums of axis crossings), Gyroscope, and Actigraphy.
+*   **Device Status:** Device Battery Percentage and Unique Device ID.
+
+**Summary Table:**
+
+| Variable Name | Category |
+| :--- | :--- |
+| **Body Battery** | Energy & Stress |
+| **Stress** | |
+| **Intensity Minutes** | |
+| **Calories** | |
+| **Heart Rate** | Vitals |
+| **Pulse Ox** | |
+| **Respiration** | |
+| **Body Composition** | |
+| **Steps** | Activity & Sleep |
+| **Floors Climbed** | |
+| **Sleep** | |
+| **Health Snapshot** | |
+
+***
+
+# Data Dictionary
+
+Below is a Data Dictionary mapping the different brand-specific inputs into standardized variables for each category.
+
+### 1. Cardiovascular & Vitals
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `heart_rate` | Numeric | bpm | Apple (Heart Rate), Samsung (Heart rate), Google (Heart Rate), Garmin (Heart Rate) | Continuous heart rate measurement. |
+| `resting_heart_rate` | Numeric | bpm | Apple (Resting Heart Rate), Google (Daily Resting Heart Rate) | Baseline heart rate measured during rest. |
+| `heart_rate_variability` | Numeric | ms | Apple (Heart Rate Variability), Google (Heart Rate Variability) | Variation in time intervals between heartbeats. |
+| `blood_pressure` | Numeric | mmHg | Apple (Blood Pressure), Samsung (Blood pressure) | Captures systolic and diastolic measurements. |
+| `ecg_signal` | Categorical | N/A | Apple (Electrocardiograms), Google (Electrocardiogram) | Electrocardiogram tracking and irregular rhythm notifications. |
+
+### 2. Respiration & Oxygen
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `respiratory_rate` | Numeric | brpm | Apple (Respiratory Rate), Google (Daily Respiratory Rate), Garmin (Respiration) | Breaths per minute. |
+| `blood_oxygen` | Numeric | % | Apple (Blood Oxygen), Samsung (Blood oxygen), Google (Oxygen Saturation), Garmin (Pulse Ox) | Peripheral oxygen saturation levels (SpO2). |
+
+### 3. Temperature
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `core_body_temperature` | Numeric | °C/°F | Apple (Body Temperature), Samsung (Body temperature), Google (Core Body Temperature) | Estimated core physiological temperature. |
+
+### 4. Activity & Mobility
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `daily_steps` | Numeric | Count | Apple (Steps), Google (Steps), Garmin (Steps) | Total step count over a specified interval. |
+| `active_energy_burned` | Numeric | kcal | Apple (Active Energy), Google (Active Energy Burned), Garmin (Calories) | Caloric expenditure during movement. |
+| `distance_traveled` | Numeric | meters | Apple (Walking + Running Distance), Google (Distance) | Standardized to millimeters by Google and tracked generally by Apple. |
+| `floors_climbed` | Numeric | Count | Samsung (Floors climbed), Garmin (Floors Climbed) | Vertical movement tracking. |
+| `advanced_gait_metrics` | Numeric | m/s, % | Apple (Walking Speed, Walking Asymmetry) | Speed, step length, and movement symmetry. |
+
+### 5. Sleep & Recovery
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `sleep_tracking` | Categorical / Numeric | Minutes | Apple (Sleep), Samsung (Sleep), Google (Sleep), Garmin (Sleep) | Sleep duration and stage analysis. |
+| `sleep_apnea_flag` | Boolean | True/False | Samsung (Sleep apnea) | Specific detection of sleep apnea events. |
+| `device_energy_score` | Numeric | 0-100 | Samsung (Energy score), Garmin (Body Battery) | Device-specific proprietary recovery/energy algorithms. |
+| `device_stress_score` | Numeric | 0-100 | Garmin (Stress) | Derived stress calculations based on HRV and activity. |
+
+### 6. Body Composition & Clinical Markers
+
+| Ikarians Standard Variable | Data Type | Unit | Source Brand Mappings | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `blood_glucose` | Numeric | mg/dL | Apple (Blood Glucose), Samsung (Blood glucose) | Endogenous blood sugar tracking. |
+| `body_fat_percentage` | Numeric | % | Apple (Body Fat Percentage), Google (Body Fat), Samsung/Garmin (Body Composition) | Estimated percentage of adipose tissue. |
+| `weight_and_bmi` | Numeric | kg/index | Apple (BMI, Lean Body Mass), Google (Weight, Height) | Body mass and structural measurements. |
+| `nutrition_log` | String/JSON | N/A | Samsung (Nutrition), Google (Nutrition Log) | Input detailing dietary and hydration entries. |
+
+***
+
+# References
+
+*   https://developer.apple.com/documentation/healthkit/data-types
+*   https://developer.samsung.com/health/data/guide/features/data-types.html
+*   https://developers.google.com/health/data-types
+*   https://developer.garmin.com/health-sdk/overview/
