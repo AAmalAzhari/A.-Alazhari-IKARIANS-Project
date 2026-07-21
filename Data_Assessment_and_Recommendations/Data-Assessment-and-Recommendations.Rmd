@@ -1,0 +1,241 @@
+---
+title: "Health Data Mapping, Insight Discovery and AI Readiness"
+author: "Abdulrahman Alazhari"
+
+output:
+  pdf_document: default
+  html_document: default
+---
+# Data Quality Assessment 
+
+## Strengths:
+
+**1. Data Versatility**
+By successfully cataloging APIs across the 4 main brands (Apple, Garmin, Google,
+and Samsung), the data system does show high versatility. The clinic or platform
+does not need to force patients to buy a specific brand watch. It can meet 
+patients exactly where they are, utilizing the devices they already wear.
+
+**2. Standardisation**
+The creation of the Data Dictionary and the Ikarians Standard Variable (e.g. 
+creating a single *body_fat_percentage* column to catch both Apple's 
+*bodyFatPercentage* and Google's *Body Fat*). This helps with mapping these 
+varying inputs to a unified, standardised schema, the system achieves semantic 
+interoperability. It ensures that when the AI or the doctor queries the database 
+for “Sleep duration”, they instantly get the combined data from all Apple, 
+Garmin, Samsung, and Google users.
+
+**3. Comprehensive Biometric Depth**
+The Data Source Catalogue proves that the system is capturing clinical-grade
+physiological metrics. The platform captures a holistic view of objective
+physical health, spanning Cardiovascular (Blood Pressure, ECG), Mobility (Gait
+asymmetry, step length), and Clinical Markers (Blood Glucose, Lean Body Mass).
+Through integrations like the Garmin Health API, the system can capture deep, high-resolution data.
+
+**4. AI and Machine Learning Readiness**
+Because the Data Dictionary explicitly defines the Data Type (e.g. Numeric,
+Boolean) and the Unit (e.g., mg/dL, Minutes) for every standard variable, the
+database is perfectly pre-structured for predictive modelling. The engineering
+team has exactly what they need to build the ETL (Extract, Transform, Load)
+pipelines to feed the AI.
+
+***
+
+## Weaknesses:
+
+**1. The Psychosocial Gap:** 
+The wearable ecosystem is blind to social determinants of health. There is a gap
+in data regarding patient relationships, spirituality and mental health. This 
+will need designing questionnaires and screening tools to measure such 
+determinants.
+
+**2. Quantitative Dietary Data:** 
+Current Google and Samsung integrations offer “Nutrition Logs” focused on
+quantitative calorie and macronutrient counting, which is inaccurate and
+misaligned with longevity science that focuses on the quality of the diet.
+
+**3. Consistency:** 
+Different brands measure the same concept using different data structures. For
+example, Apple records Blood Oxygen as a decimal percentage 
+(*HKQuantityTypeIdentifier.oxygenSaturation*), while Samsung records it as a
+whole integer via Google Health Connect (*OxygenSaturationRecord*). Without a 
+strict backend translation layer, the AI will misinterpret these structural 
+differences.
+
+***
+
+
+# Data Gap Assessment
+
+Mapping the hardware data against the core pillars of longevity science reveals 
+four main data gaps. To calculate a true, holistic iKfactor, the following data 
+gaps must be acknowledged and addressed:
+
+**Gap 1: The Psychosocial Data Gap**
+Negative relationships, lack of life purpose, and clinical depression are 
+primary drivers of biological decline. The wearable ecosystem currently remains 
+blind to these critical social determinants of health.
+
+**Gap 2: The Qualitative Nutrition Gap**
+Current integrations offer nutrition logs heavily focused on quantitative 
+calorie and macronutrient counting, which is inaccurate and misaligned with 
+longevity science that focuses on the qualitative aspects of the diet.
+
+**Gap 3: The Behavioral Risk Gap**
+The platform currently lacks the baseline data required to stratify a user's 
+behavioral mortality risk (such as smoking or binge drinking patterns).
+
+**Gap 4: The Normalisation Gap**
+A gap remains in the execution of this data. Because Garmin uses math to 
+calculate a “Stress Level” and Apple uses raw “HRV,” the platform still lacks 
+the ETL (Extract, Transform, Load) normalisation engine required to 
+mathematically harmonize these different hardware algorithms. Doctors cannot 
+compare a Garmin user's baseline directly against an Apple user's baseline.
+
+***
+
+# Signal vs. Noise Analysis
+
+**1. Context-Free Stress Scores**
+
+*   **The Noise:** Wearables use HRV and heart rate to output a "Stress Score".
+A Garmin watch might say "Stress Score of 60" while Apple outputs an "HRV of
+40ms." This is purely algorithmic noise driven by the different math of the tech
+companies.
+
+*   **The Signal:** The AI must evaluate patients against their own baseline
+(Z-Scoring), not against each other. The true clinical signal is extracted by
+tracking the "Rate of Change". A valid signal triggers only when Patient A's HRV
+drops 2 standard deviations below their own 30-day Apple baseline, or when
+Patient B's stress score spikes above their own Garmin baseline. This turns
+fragmented relative data into an accurate, comparable clinical alert.
+
+**2. Quality of Movement vs. Quantity of Steps**
+
+*   **The Noise:** Daily Step Count. A patient logging 2,000 steps instead of
+10,000 steps on a one day is usually just scheduling noise (e.g. bad weather) 
+and does not indicate a sudden decline in biological health.
+
+*   **The Signal:** A longitudinal, three-month increase in 
+*walkingAsymmetryPercentage* paired with a decrease in *walkingSpeed* (captured
+via Apple Health). Because this is happening steadily over 90 days, the AI knows
+it is not just a temporary situation, it is an established health change.
+
+**3. Sleep Interruptions vs. Respiratory Events**
+
+*   **The Noise:** Brief tossing and turning as part of normal sleep
+architecture or minor awakenings at night may be detected and registered as
+sleep disturbance noise.
+
+*   **The Signal:** A sharp drop in Oxygen Saturation occurring at the exact
+same timestamp that the Respiratory Rate spikes. This isolates a critical
+longevity risk: Obstructive Sleep Apnea (OSA) from its noise.
+
+**4. Subjective Signals**
+
+*   **The Noise:** A spike in Apple’s *electrodermalActivity* or Garmin’s Stress
+Level could be acute sympathetic nervous system activation from a hard workout 
+or a busy day at work. The hardware alone cannot tell if the stress is physical 
+or emotional.
+
+*   **The Signal:** Anchoring the wearable data against standardised qualitative
+tools such as PROMIS Social Isolation or Global Mental. If a chronically
+elevated wearable stress baseline intersects with a PROMIS Social Isolation or
+Global Mental Health T-Score above a cut-off value, the AI creates a high-value 
+signal as: “Chronic Stress”. The clinician immediately knows the physiological 
+damage is being driven by psychological factors rather than physical strain.
+
+***
+
+# Recommendations for Future Data Collection
+
+## A. For the Objective Data:
+
+The data engineering team must build a Data Normalization Engine referred to as 
+an ETL pipeline: Extract, Transform, Load. This engine acts as a universal 
+translator between the raw wearable APIs and the physician’s dashboard. Here is 
+the step-by-step technical strategy to do so:
+
+**1. Define the Data Schema**
+Before translating, we must define exactly what the final output should look 
+like. The database needs a master table where every metric has a standardised 
+name, data type, and unit. For steps, the target schema looks like this:
+
+*   Target Column Name: *ik_steps*
+*   Data Type: Integer
+*   Time Aggregation: Daily Total (Midnight to Midnight, Local User Time)
+*   Metadata Required: *user_id*, *date*, *device_source_id*
+
+**2. Build the Mapping Dictionary**
+The backend needs a configuration file (like a JSON dictionary or an SQL table) 
+that explicitly tells the system which foregin keys belong to the Ikarians 
+primary key. When imported dataset arrive at the Ikarians server, the system 
+first checks the *device_source_id*. It then looks at this dictionary to know 
+exactly which field to extract from that specific brand's imported dataset.
+
+**3. Apply a Standard Time-Window Transformation**
+Wearable brands send the data at different time aggregations or frequency, for 
+example:
+
+*   Apple: Apple Health writes *stepCount* in tiny increments throughout the day.
+
+The pipeline must standardise the time window. It should run a script that 
+groups all entries by *user_id* and *date*, sums the step increments, and loads 
+the single total integer into *ik_steps*.
+
+**4. The 3-Tier Data Pipeline Architecture**
+To ensure the physician's dashboard never crashes or displays wrong data, the 
+database should be structured in three layers:
+
+1.  **Extract:** This is the step where data is pulled from the 
+Apple/Garmin/Google APIs and saved in its raw form. This ensures we always have 
+the original data for audit purposes or if we need to re-run algorithms.
+
+2.  **Transform:** This is where the script runs. The database acts as the 
+normalization engine by matching the messy raw data against our data mapping 
+dictionary and transforming it into the clean Ikarians standard variable.
+
+3.  **Load:** This is the final, clean table containing the output of Ikarians 
+standard variable that the physician's dashboard shows.
+
+## B. For the Subjective Data:
+
+Based on the Data Source Catalogue compiled from the Apple, Samsung, Google, and 
+Garmin documentation, the wearable APIs does leave gaps in the subjective, 
+psychosocial, and qualitative pillars of the 6 longevity pillars. To address 
+this, I would adapt using PROMIS (Patient-Reported Outcomes Measurement 
+Information System) Short Forms to capture context that wearables can’t 
+currently detect.
+
+***All mentioned forms and screening tools are made available in the attached "Supplementary Document - Forms" file.***
+
+**References:**
+
+**1.** <https://healthmeasures.net/>
+
+**2.** Pierre, E. F., & Almaroof, N. (2022). Nutrition history taking: A 
+practical approach. American Family Physician, 106(4), 427–438.
+
+**3.** <https://www.hamiltonhealthsciences.ca/wp-content/uploads/2022/04/Cardiac-Health-Mediterranean-Diet-Adherence-Screener.pdf>
+
+**4.** Estruch, Ramón, et al. "Primary Prevention of Cardiovascular Disease with 
+a Mediterranean Diet Supplemented with Extra-Virgin Olive Oil or Nuts." New 
+England Journal of Medicine, vol. 378, no. 25, 2018, p. e34.
+
+**5.** Donoghue, K., Patton, R., Phillips, T., Deluca, P., & Drummond, C. (2014).
+The Effectiveness of Electronic Screening and Brief Intervention for Reducing 
+Levels of Alcohol Consumption: A Systematic Review and Meta-Analysis. Journal of 
+Medical Internet Research, 16, e142.
+
+**6.** Kypri, K. (2008). Randomized Controlled Trial of Web-Based Alcohol 
+Screening and Brief Intervention in Primary Care. Archives of Internal Medicine, 
+168, 530.
+
+**7.** Tansil, K. A., Esser, M. B., Sandhu, P., et al. (2016). Alcohol Electronic 
+Screening and Brief Intervention. American Journal of Preventive Medicine, 51, 
+801-811.
+
+**8.** Todd F. Heatherton et al (1989), Measuring the Heaviness of Smoking: 
+using self-reported time to the first cigarette of the day and number of 
+cigarettes smoked per day. British Journal of Addiction, 84: 791-800.
+
