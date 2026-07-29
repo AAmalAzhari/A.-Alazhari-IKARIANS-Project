@@ -1,0 +1,313 @@
+---
+title: "Health Data Mapping, Insight Discovery and AI Readiness"
+author: "Abdulrahman Alazhari"
+
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+## **Implementation of Data Architecture and Subjective Data Management**
+
+### **Step 1: Objective Data Normalisation via a 3-Tier ETL Pipeline**
+
+**Implementation:** Build a Data Normalisation Engine using an Extract, Transform, Load (ETL) pipeline. Here is a technical implementation of the ETL Pipeline using an R code:
+
+
+```{r eval=FALSE}
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+
+# PHASE 1: TRANSFORM (Mapping Dictionary & Unit Normalisation)
+# Using the exact Data Dictionary proposed to map brand-specific inputs 
+# into the unified Ikarians Standard Variables.
+
+ik_mapped_data <- raw_wearable_data %>%
+  mutate(
+    # 1. Map raw brand API names to the Ikarians Standard Variables
+    ik_standard_variable = case_when(
+      
+      # Category 1: Cardiovascular & Vitals
+      raw_metric_name %in% c("Heart Rate", "Heart rate") ~ "heart_rate",
+      raw_metric_name %in% c("Resting Heart Rate", 
+                             "Daily Resting Heart Rate") ~ "resting_heart_rate",
+      raw_metric_name == "Heart Rate Variability" ~ "heart_rate_variability",
+      raw_metric_name %in% c("Blood Pressure", 
+                             "Blood pressure") ~ "blood_pressure",
+      raw_metric_name %in% c("Electrocardiograms", 
+                             "Electrocardiogram") ~ "ecg_signal",
+      
+      # Category 2: Respiration & Oxygen
+      raw_metric_name %in% c("Respiratory Rate", "Daily Respiratory Rate", 
+                             "Respiration") ~ "respiratory_rate",
+      raw_metric_name %in% c("Blood Oxygen", "Blood oxygen", 
+                             "Oxygen Saturation", "Pulse Ox") ~ "blood_oxygen",
+      
+      # Category 3: Temperature
+      raw_metric_name %in% c("Body Temperature", "Body temperature", 
+                             "Core Body Temperature") ~ "core_body_temperature",
+      
+      # Category 4: Activity & Mobility
+      raw_metric_name == "Steps" ~ "daily_steps",
+      raw_metric_name %in% c("Active Energy", "Active Energy Burned", 
+                             "Calories") ~ "active_energy_burned",
+      raw_metric_name %in% c("Walking + Running Distance", 
+                             "Distance") ~ "distance_traveled",
+      raw_metric_name %in% c("Floors climbed", 
+                             "Floors Climbed") ~ "floors_climbed",
+      raw_metric_name %in% c("Walking Speed", 
+                             "Walking Asymmetry") ~ "advanced_gait_metrics",
+
+      # Category 5: Sleep & Recovery
+      raw_metric_name == "Sleep" ~ "sleep_tracking",
+      raw_metric_name == "Sleep apnea" ~ "sleep_apnea_flag",
+      raw_metric_name %in% c("Energy score", 
+                             "Body Battery") ~ "device_energy_score",
+      raw_metric_name == "Stress" ~ "device_stress_score",
+      
+      # Category 6: Body Composition & Clinical Markers
+      raw_metric_name %in% c("Blood Glucose", 
+                             "Blood glucose") ~ "blood_glucose",
+      raw_metric_name %in% c("Body Fat Percentage", "Body Fat", 
+                             "Body Composition") ~ "body_fat_percentage",
+      raw_metric_name %in% c("BMI", "Lean Body Mass", "Weight", 
+                             "Height") ~ "weight_and_bmi",
+      raw_metric_name %in% c("Nutrition", "Nutrition Log") ~ "nutrition_log")
+  )
+    
+    # 2. Standardise Units (e.g. Google Health Distance mapped from mm to meters)
+    ik_standard_value = case_when(
+      device_brand == "Google" & 
+        raw_metric_name == "Distance" ~ raw_value / 1000,
+      TRUE ~ raw_value)
+  
+
+```
+
+
+
+```{r eval=FALSE}
+
+# PHASE 2: TIME-WINDOW AGGREGATION & COMBINING
+# Group by patient and date, applying the correct mathematical logic (SUM vs MEAN).
+# Because we mapped everything in Phase 1, we aggregate the mapped variables as follows:
+
+ik_aggregated_data <- ik_mapped_data %>%
+  group_by(user_id, date, ik_standard_variable) %>%
+  summarize(
+    aggregated_value = case_when(
+      # Use SUM for cumulative daily metrics (Activity & Sleep duration)
+      first(ik_standard_variable) %in% c("daily_steps", "distance_traveled",
+      "active_energy_burned", "floors_climbed", 
+      "sleep_tracking") ~ sum(ik_standard_value, na.rm = TRUE),
+      # Use MEAN for continuous/discrete snapshots (Vitals, Temps, Recovery..)
+      TRUE ~ mean(ik_standard_value, na.rm = TRUE)
+    )
+  ) %>%
+  ungroup() %>%
+  
+  # Pivot the data so every standard variable becomes its own column in a master table
+  pivot_wider(names_from = ik_standard_variable, values_from = aggregated_value)
+
+
+# PHASE 3: LOAD
+# Export the final consolidated master table for the physician dashboard
+write.csv(ik_aggregated_data, "ikarians_master_dashboard_table.csv", row.names = FALSE)
+```
+
+
+***
+
+### **Step 2: Questionnaire Scheduling and Follow-up**
+
+To ensure subjective data collection is accurate, clinically useful and less bothering, I suggest implementing an active approach for patient surveying as follows:
+
+**1. In-Clinic Baseline Assessment**
+
+Instead of sending high-burden onboarding questionnaires to the patient's phone to complete alone, these forms are completed during the first physician visit where the physician presents the forms on an interactive screen or on a tablet to the patient in the clinic.
+This guarantees completion and allows the physician to clarify questions, ensuring the subjective responses accurately match the patient’s true health status. It also allows patient to ask about unclear questions instead of guessing or giving inaccurate answers.
+
+**2. Risk-Based Scheduled Monitoring**
+
+Following the baseline assessment, the physician uses the patient's health risk stratification (according to history, comorbidities, risk factors...etc.) to customise their remote monitoring. The clinician determines exactly which specific short-form questionnaires (e.g. PROMIS mental health forms, MEDAS diet screener…etc) the patient needs to refill on their mobile app and at what frequency, so that the questionnaire burden is reduced and the forms chosen to refill are more tailored and specific to the patient needs.
+
+**3. Breakthrough Schedules**
+
+Patients are counselled that if they feel any changes in their baseline longevity pillars between scheduled questionnaires, they should log them via the Ikarus AI Agent. The Agent instantly notifies the physician's dashboard of this subjective shift, allowing the doctor to push an early follow-up questionnaire or invite the patient to the clinic for a check-up, keeping the patient actively engaged without survey fatigue.
+
+***
+
+
+### **Example:**
+
+Patient Instructions: Please read each statement carefully and select the number that best describes your experience.
+
+*Evaluating The Relationships Pillar*
+
+This section helps us understand your sense of connection, which directly impacts your physical recovery and biological aging.
+
+*A. Social Isolation (PROMIS Short Form v2.0 - Social Isolation 8a)*
+
+Please respond to each item by marking one number per row.
+
+1.I feel left out.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+2.I feel that people barely know me.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+3.I feel isolated from others.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+4.I feel that people are around me but not with me.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+5.I feel isolated even when I am not alone.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+6.I feel that people avoid talking to me.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+7.I feel detached from other people.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+8.I feel like a stranger to those around me.
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+***
+
+*B. Companionship (PROMIS Short Form v2.0 - Companionship 6a)*
+
+
+Please respond to each item by marking one number per row.
+
+9.Do you have someone with whom to have fun?
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+10.Do you have someone with whom to relax?
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+11.Do you have someone with whom you can do something enjoyable? 
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+12.Can you find companionship when you want it?
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+13.Do you have someone to keep you company at home?
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+14.Do you have someone to go with you to an event?
+
+Never/ Rarely/ Sometimes/ Usually/ Always
+
+
+***
+
+
+
+### **How the Scoring System Works for PROMIS Forms**
+
+According to the PROMIS methodology and scoring system, answers scores are already standardised into a T-Score (using given translation tables) to reflect a subjective score level compared to the general population of the U.S. Here is an illustration on how to use the scoring manual of each PROMIS form and interpret the results:
+
+**1. Calculating the Raw Summed Score**
+
+The AI first calculates a Raw Summed Score for each specific sub-section. Every question must be answered to produce a valid raw score.
+For the 8-question Social Isolation form, the lowest possible score is 8 (answering "1" to all) and the highest is 40 (answering "5" to all).
+For the 6-question Companionship form, the raw score ranges from 6 to 30.
+
+**2. Converting to a Standardised T-Score**
+
+Because raw numbers don't provide clinical context, the system uses the official PROMIS conversion tables to translate the raw score into a standardised T-Score.
+A T-score of **50** represents the exact average of the United States general population.
+The standard deviation (SD) is 10.
+Example: If a patient scores a raw "10" on the Social Isolation 8a form, the translation table converts this to a T-score of 41.4.
+
+**3. Clinical Interpretation**
+
+The AI and the physician evaluate the T-scores to trigger actionable alerts:
+For Negatively-Worded Concepts (Social Isolation & Anxiety): A higher T-score means worse health. A T-score of 60 means the patient's isolation or anxiety is one full standard deviation worse than the general population. If the AI sees an Anxiety T-score of 65 coupled with low wearable sleep metrics, it instantly flags "High Sleep Reactivity driven by severe anxiety" to the physician. For Positively-Worded Concepts (Companionship): A higher T-score means **better** health. So a Companionship T-score of 40 is one standard deviation **worse** than average, indicating a lack of social support. 
+
+By using this structured numbering and standardised T-score translation, the Ikarians platform converts subjective human measures into objective mathematical metrics that the AI can seamlessly cross-reference with wearable data.
+
+
+Scoring Manuals (with score translation tables) of the relevant PROMIS Forms are made available in the Supplementary Document.
+
+***
+
+### **Step 3: Signal vs. Noise Filtering & AI Alert Generation**
+
+To prevent the clinician and patient from being overwhelmed by irrelevant data spikes, the Ikarus AI Agent must act as a clinical filter. Eliminating low signal variables saves computational power and improves insight accuracy.
+
+The AI must evaluate physiological data using Z-scoring against the patient's own baseline. The platform should be programmed to cross-reference objective wearable data with subjective survey scores to create high-value compound signals.
+
+The following are some suggestions to start with:
+
+**1. Physical Activity Pillar**
+
+**The Signal (Physical Activity and Improved Oxygen Pulse):** 
+The Ikarus AI Agent correlates sustained moderate-to-vigorous aerobic exercise with improvements in peak oxygen uptake (VO2/kg) and oxygen pulse. By tracking wearable data across time, the Agent can isolate a true physiological signal: a routine of 4–7 days of aerobic activity directly improving right ventricular function and microcirculation. If the Agent detects poor cardiovascular fitness on the smartwatch, it can generate an evidence-based nudge asking to increase aerobic frequency to improve cardiopulmonary hemodynamics.
+
+**2. Sleep & Recovery Pillar**
+**The Signal (Oxygen Pulse and Sleep):** The AI Agent filters out the noise of normal sleep movements or brief tossing and turning and flags a true risk signal: clustered episodes of deep oxygen desaturation occurring alongside spikes in respiratory rate. This allows the AI to accurately identify obstructive sleep apnea (OSA) or nocturnal hypoventilation.
+
+**The Signal (Increased Stress and Reduced Sleep):** If a patient logs high psychosocial stress in their journal, the AI will look for corresponding physiological signals such as prolonged sleep latency, increased nocturnal arousals, and reductions in REM sleep. The AI recognises that this is not just a bad night of sleep, but a pathogenic vulnerability to insomnia that requires early preventive intervention.
+
+**3. Mental Health Pillar**
+**The Signal (Stress and Heart Rate):** If the AI detects a long-term pattern of reduced parasympathetic activation, manifesting as an elevated resting heart rate, while cross-referencing this with subjective anxiety or stress logs/survey scores, the AI flags a high risk for stress-induced cardiovascular and metabolic dysregulation.
+
+**4. Diet & Nutrition Pillar**
+**The Signal (Diet and Long-Term Objective Health Metrics Effects):** Instead of counting calories, the AI correlates the patient’s qualitative Mediterranean Diet Adherence Screener (MEDAS) scores with clinical data such as lowered body mass index (BMI), reduced waist circumference, and decreased fasting blood glucose and triglycerides.
+
+**5. Social Relationships Pillar**
+**The Signal (Relationships and Stress):** The AI cross-references objective stress markers (as chronically elevated heart rate and lowered HRV) with subjective PROMIS Social Isolation or Companionship scores. If the AI detects a lack of social interaction, it recognises that the physiological stress response is being driven by isolation, triggering a nudge to connect with friends rather than a prompt to rest physically.
+
+**6. Spirituality Pillar**
+**The Signal (Spirituality and Stress):** The AI cross-references a patient's PROMIS Spirituality scores with their real-time stress reactivity. If a patient with strong spiritual or purposeful grounding experiences an acute stressor, the AI expects to see an adaptive stress response followed by a quick autonomic recovery. Conversely, if a patient lacks this spiritual buffer, the AI identifies prolonged sympathetic arousal and suggests targeted downshifting routines such as meditation or prayer to shed stress and prevent chronic inflammation.
+
+
+***
+
+
+## **References:**
+
+• Singh D, Khan S, Verma S, Singh S, Talwar A. The uses of overnight pulse oximetry Lung India. 2020;37(2):151-157.
+
+• Ehlken N, Lichtblau M, Klose H, et al. Exercise training improves peak oxygen consumption and haemodynamics in patients with severe pulmonary arterial hypertension and inoperable chronic thrombo-embolic pulmonary hypertension: a prospective, randomized, controlled trial. European Heart Journal. 2015;37(1):35-44.
+
+• Kalmbach DA, Anderson JR, Drake CL. The impact of stress on sleep: Pathogenic sleep reactivity as a vulnerability to insomnia and circadian disorders. J Sleep Res. 2018; 27:e12710.
+
+• Susanna JÄRVELIN-PASANEN, Sanna SINIKALLIO, Mika P. TARVAINEN, Heart rate variability and occupational stress—systematic review, Industrial Health, 2018, Volume 56, Issue 6, Pages 500-511, Released on J-STAGE November 21, 2018, Advance online publication June 16, 2018, Online ISSN 1880-8026
+
+• de Ridder, D., Kroese, F., Evers, C., Adriaanse, M., & Gillebaart, M. (2017). Healthy diet: Health impact, prevalence, correlates, and interventions. Psychology & Health, 32(8), 907–941
+
+• Jiang S, Liu H, Li C. Dietary Regulation of Oxidative Stress in Chronic Metabolic Diseases. Foods. 2021; 10(8):1854.
+
+• Jaremka, L.M., Lindgren, M.E. and Kiecolt-Glaser, J.K. (2013), SYNERGISTIC RELATIONSHIPS AMONG STRESS, DEPRESSION, AND TROUBLED RELATIONSHIPS: INSIGHTS FROM PSYCHONEUROIMMUNOLOGY. Depress Anxiety, 30: 288-296.
+
+• Acoba EF. Social support and mental health: the mediating role of perceived stress. Front Psychol. 2024;15:1330720. Published 2024 Feb 21.
+
+• Algahtani FD, Alsaif B, Ahmed AA, Almishaal AA, Obeidat ST, Mohamed RF, Kamel RM, Gul I and Hassan SN (2022) Using Spiritual Connections to Cope With Stress and Anxiety During the COVID-19 Pandemic. Front. Psychol. 13:915290.
+
+• Papadaki A, Johnson L, Toumpakari Z, England C, Rai M, Toms S, Penfold C, Zazpe I, Martínez-González MA, Feder G. Validation of the English Version of the 14-Item Mediterranean Diet Adherence Screener of the PREDIMED Study, in People at High Cardiovascular Risk in the UK. Nutrients. 2018; 10(2):138.
+
+• Johnston, C.S., Bliss, C., Knurick, J.R. et al. Rapid Eating Assessment for Participants [shortened version] scores are associated with Healthy Eating Index-2010 scores and other indices of diet quality in healthy adult omnivores and vegetarians. Nutr J 17, 89 (2018).
+
+• DeMartini KS, Carey KB. Optimizing the use of the AUDIT for alcohol screening in college students. Psychological Assessment. 2012;24(4):954-963.
+
+
+***
