@@ -1,0 +1,112 @@
+---
+title: "Health Data Mapping, Insight Discovery and AI Readiness"
+author: "Abdulrahman Alazhari"
+
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# ^Final Report^
+
+**Abstract**
+
+This project establishes an Al-ready health data architecture for the lkarians platform, transitioning it from raw, multi-source wearable data ingestion into a structured framework optimised for Large Language Models (LLMs). By developing a 3-tier Extract, Transform, Load (ETL) pipeline, integrating Patient-Reported Outcomes Measurement Information System (PROMIS) T-scoring to close psychosocial data gaps, and designing external AI tools, the system achieves semantic interoperability. This framework successfully isolates true clinical signals from hardware noise and enforces strict clinical boundaries, ensuring the Ikarus Al agent delivers precise, hallucination-free, and actionable longevity insights.
+
+ 
+
+**1. Introduction**
+
+The lkarians platform is focusing on machine learning integration to provide highly personalised longevity insights via its Al agent, Ikarus. However, integrating health data presents some challenges; wearable data from varying brands (Apple, Garmin, Google, Samsung) is structurally fragmented, prone to hardware noise, and completely blind to the social determinants of health (e.g. isolation, purpose, anxiety). To safely deploy an LLM in a clinical environment, the system cannot rely on raw data or medical queries. This project aims to construct a comprehensive "Al Readiness Framework" that achieves semantic interoperability, standardises subjective human experiences, generates relevant insights and implements strict architectural guardrails to prevent the Al from exceeding its token limits, hallucinating clinical facts, or providing inappropriate medical advice.
+
+ 
+
+**2. Materials and Methods**
+
+The initial data ecosystem consisted of scattered wearable API metrics spanning cardiovascular, respiratory, activity, and sleep categories across four major brands. Exploratory analysis revealed a lack of semantic interoperability (e.g. Apple recording bodyFatPercentage versus Google measuring Body Fat or using different measurement units like millimeters vs. meters). Furthermore, a "Psychosocial Gap" was identified, as wearables lack qualitative context regarding mental health and social connection, which are critical pillars of the lkarians longevity model.
+
+**2.1. Analytical Workflow and Preprocessing Steps**
+
+A 3-Tier Data Normalisation Engine (ETL Pipeline) was designed using R (dplyr, tidyr):
+
+**1.** **Extract:** Raw API data is ingested and preserved for audit purposes.
+
+**2.** **Transform**: A mapping dictionary translates brand-specific names and units into unified "Ikarians Standard Variables" (e.g. unifying all step data into ik_steps).
+
+**3.** **Load**: To protect the LLM's token limits, high-frequency intermittent data points are grouped by user_id and date into standard 24-hour integers. Cumulative aggregation (SUM) is applied to volume metrics like steps, while discrete arithmetic aggregation (MEAN) is applied to continuous physiological metrics like heart rate.
+
+To resolve the psychosocial gap, subjective data integration utilised the PROMIS short forms. Instead of arbitrary rating scales, qualitative human experiences (e.g. anxiety, social isolation, spirituality) are translated using standardised T-scores (where 50 represents the US population average with a standard deviation of 10).
+
+**2.2. Model Implementation and Validation Strategies**
+
+To prevent the Al from reacting to hardware discrepancies, a Signal vs. Noise analytical model was implemented. Instead of cross-brand comparisons, the system relies on intra-individual Z-scoring to track a patient's long-term rate of change against their own historical baseline. Furthermore, the model employs a-multi-modal data fusion approach to construct true compound signals. For example, it filters out the algorithmic noise of normal sleep movements, such as brief tossing and turning where the system isolates a high-value clinical signal for longevity risks like Obstructive Sleep Apnea (OSA) only when it detects a sharp drop in oxygen saturation occurring at the exact same timestamp as a spike in respiratory rate.
+
+ 
+
+**3. Results**
+
+The implementation of the data architecture yielded a highly structured, Al-ready framework and a suite of active clinical validation tools designed to govern the Ikarus Al.
+
+**3.1. Data Standardisation and Compound Signals**
+
+The ETL pipeline successfully outputs unified daily summaries, granting the Al a clear, chronologically aligned timeline. By normalising both objective wearable data and subjective PROMIS T-scores, the system was able to construct high-value compound signals. For example, crossing an elevated wearable stress baseline with a high PROMIS Social Isolation T- score enables the Al to identify true Chronic Stress rather than misinterpreting acute workout strain.
+
+**3.2. Subjective Data Integration**
+
+Because wearables are blind to social determinants of health, the project successfully transformed qualitative human feelings into objective mathematics by integrating PROMIS (Patient-Reported Outcomes Measurement Information System) Short Forms and other relevant forms.
+
+• Targeted Screening: Rather than relying on arbitrary 0-10 scales, the platform utilises specific validated forms to measure Mental Health (e.g. Global Mental Health 4a, Anxiety 8a), Social Relationships (e.g. Social lsolation 8a, Companionship 6a), and Spirituality (e.g. Spirituality 6a). PROMIS converts raw survey answers into a standardised T-Score, where a score of 50 represents the exact average of the US general population, with a standard deviation of 10. This translation allows the Al to objectively quantify the subjective data measured.
+
+**3.3. External Al Tools**
+
+To prevent clinical hallucinations, three targeted external Al tools were developed to act as validation layers before the LLM interacts with the patient:
+
+**The Biometric-Pharmacological Cross Referencer (verify_biometric_drug_interactions)**
+
+This tool cross-references anomalous biometric data against a patient's active medication list using globally standardised medication codes (extracted via e-prescription/medication package scanning). For example, if the system detects severe bradycardia (\<60 bpm), the tool queries external databases (e.g. Lexicomp). If the patient’s medication list includes Digoxin, it susppects a toxicity risk (characterised by a bradycardia) and actively blocks the behavioral AI from praising the patient's cardiovascular fitness nudges, flagging the physician instead. By executing targeted internal tools to query massive external pharmacovigilance databases on the backend, the platform leverages continuously updating global medical knowledge. This protects the Al's internal token limits and eliminates the risk of hallucination by injecting only precise, verified drug-interaction data into the context window.
+
+**The Signal vs. Noise Validator (filter_signal_from_noise)**
+
+This uses personalised baselines over universal limits. while some health systems manually cap acceptable physiological values (e.g. setting a universal maximum limit for heart rate or blood pressure), this approach is often inaccurate because it ignores individual patient context, such as comorbidities, genetic factors or risk factors exposure.
+
+To solve this, the validator dynamically evaluates sudden physiological spikes against the patient's own unique historical baseline. It calculates the patient’s Z-score, and if a metric deviates by more than 3 standard deviations it registers the event as a severe outlier.
+
+When the tool detects an extreme deviation, it returns a structured JSON object containing the Z-score and an emergency escalation protocol. This forces the Al to immediately alter its behavior by:
+
+• Halting all standard lifestyle nudges to prevent the Al from offering inappropriate or dangerous advice (such as suggesting a workout when a patient is experiencing a cardiac event).
+
+• Prompting the patient to verify their health status, asking if they feel unwell or are experiencing symptoms to confirm that the reading is not an outlier.
+
+• Then the event is flagged on the physician dashboard, instantly alerting the physician to the anomaly.
+
+The primary risk associated with this type of detection is a hardware glitch, such as a loose smartwatch strap recording a falsely abnormal reading that could trigger unnecessary panic. By simply asking the patient to verify their symptoms, such risk is mitigated.
+
+**The Dietary Computer Vision Extractor (scan_nutrition_table_and_portion_image)** The tool extracts exact nutrients from Nutrition Facts labels and estimates food portions, without survey fatigue. It operates by analysing user-uploaded images rather than relying on text entry, where it uses Optical Character Recognition (OCR) to scan and read the exact nutritional values directly from the Nutrition Facts table labelled on the food products. Simultaneously, it uses computer vision to analyse the photo of the physical plate to visually estimate the volume and exact portion size the patient is about to consume.
+
+ 
+
+**4. Discussion**
+
+The development of this Al-readiness framework transforms the Ikarians platform from a basic fitness tracker into a highly intelligent, clinically safe medical companion. The 3-tier ETL pipeline solves semantic interoperability, ensuring the system is entirely hardware-agnostic and that clinicians and the Al agent view a unified data schema.
+
+An important aspect is that holistic patient profiling cannot rely on objective data alone. The successful transformation of subjective feelings into objective mathematical PROMIS T-scores effectively closes the psychosocial gap, granting a true 360-degree view of patient longevity. The greatest strength of PROMIS is that it utilises Item Response Theory (IRT) to convert abstract, qualitative human data (like loneliness or anxiety) into a mathematical T-score that is already standardised where a score of 50 representing the exact US population average and a standard deviation of 10. In this way, the Al and clinicians can gain immediate, objective clinical context.
+
+A major limitation of such remote monitoring is that adherence to questionnaires significantly reduces if the frequency of administration increases. lf the app pings the patient too often, they will experience survey fatigue and disengage.
+
+To mitigate this, the system implements “Risk-Based Scheduled Monitoring” and ""In-Clinic Baseline Assessments". High-burden forms are completed alongside the physician during the initial visit, and mobile follow-up questionaires are strictly customised to the patient's specific risk profile to minimise unnecessary exhausting surveys.
+
+For the Pharmacological Cross-Referencing tool, a limitation is the reliance on patient compliance for scanning medication. In addition, relying on scanning technology and cross-referencing may also introduce specific risks. The primary risk is that the camera scanner might misread a blurry medication label, or the patient might scan an over-the-counter (OTC) herbal supplement that lacks a standard monitoring protocol. If this happens, the Al might miss the pharmacological link.
+
+The system mitigates these risks through a strict architectural “Read-Only” boundary safety net such that If the scanner misreads a label or finds no pharmacological link, the system simply defaults back to its standard data monitoring and processing. Most importantly, the Al is blocked from attempting to independently diagnose an illness and will never instruct the patient to stop taking their medication. It only uses the data to hold back its own behavioral nudges and alert the human physician to review the case when needed.
+
+As for the Dietary Computer Vision Extractor tool, a similar limitation is relying on computer vision where the OCR might misread a blurry label, or the computer vision might struggle with depth perception leading to an inaccurate estimate of the portion size. The system mitigates these risks through two main strategies:
+
+1\. Confidence Scoring: The design ensures the Al treats the calculated intake purely as an estimate rather than a hard clinical diagnostic. By returning a stated confidence score (eg. “85%”), the system acknowledges its own potential for error and prevents the Al from making critical medical decisions based on potentially flawed image data.
+
+2\. Visual Scaling: To specifically solve the depth perception issue, the Al can be programmed to casually ask the user to include a standard reference object in their photo. By placing an everyday object of a generally known size, such as a fork or their own hand, next to the plate, the computer vision tool gains a reliable sense of scale, allowing it to estimate the physical volume of the food much more accurately.
+
+ 
+
+**5. Conclusions**
+
+By constructing a robust 3-tier ETL pipeline, integrating PROMIS T-scoring mathematics for subjective insights, and introducing clinical insights via targeted external Al tools, this project successfully structured complex, multi-source health data, ensuring the Ikarus Al agent operates safely, free of hallucinations and delivering precise, personalised longevity insights.
